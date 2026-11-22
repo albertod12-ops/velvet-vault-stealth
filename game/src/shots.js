@@ -3,7 +3,7 @@
 // autopilot that walks tile waypoints, so the frame is what a short game really
 // looks like and the same seed always gives the same frame. The cover then poses
 // the decisive moment the game is about: the prize already in Wren's pocket,
-// one watchman lured away by a pebble, Wren slipping past behind him in the
+// one night guard lured away by a pebble, Wren slipping past behind him in the
 // dark — with the field notes and callouts drawn as part of the scene.
 import { STEP } from './config.js';
 import { SCREEN_PLAY } from './render.js';
@@ -108,7 +108,7 @@ function runScene(world, levelIndex, segments, totalSeconds) {
 export function stageShot(name, world) {
   if (name === 'patrol') {
     // Level 1: Wren waits in the dark of the west gallery, watching the hall
-    // watchman's cone sweep past the doorway.
+    // guard's cone sweep past the doorway.
     return runScene(world, 0, [
       { tiles: [[2, 10], [5, 10], [5, 6]], stance: 'walk', hold: 3.0 },
     ], 8);
@@ -145,7 +145,7 @@ export function stageShot(name, world) {
     s.player.y = atExit.y;
     s.player.dir = -Math.PI / 2;
     s.player.stance = 'walk';
-    // The vault watchman is back on his beat, far from the hatch, cone west.
+    // The vault guard is back on his beat, far from the hatch, cone west.
     const g1 = s.guards[1];
     const vault = tileCenter(19, 3);
     g1.x = vault.x; g1.y = vault.y; g1.dir = Math.PI;
@@ -154,8 +154,8 @@ export function stageShot(name, world) {
   }
   // Cover (default): level 1, the whole game in one frame. Wren slips through
   // the house to the east vault, pockets two pieces of loot on the way, and
-  // ends crouched in the dark behind the crates while the vault watchman —
-  // lured off his beat by a pebble — asks the empty air what that was.
+  // ends crouched in the dark behind the crates while the vault guard —
+  // lured off his beat by a pebble — mutters at the empty air.
   runScene(world, 0, [
     { tiles: [[2, 10], [6, 10], [6, 5], [8, 5], [10, 5], [10, 8], [13, 8], [16, 8], [16, 9], [20, 9]], stance: 'walk' },
     { tiles: [], stance: 'sneak', pebble: [22, 5], hold: 1.6 },
@@ -181,12 +181,12 @@ export function stageShot(name, world) {
   s.player.y = wren.y;
   s.player.dir = Math.PI;
   s.player.stance = 'sneak';
-  // The hall watchman: mid-beat below the lamp, cone sweeping down the hall.
+  // The hall guard: mid-beat below the lamp, cone sweeping down the hall.
   const hall = tileCenter(12, 4);
   const g0 = s.guards[0];
   g0.x = hall.x; g0.y = hall.y; g0.dir = Math.PI / 2;
   g0.state = 'patrol'; g0.suspicion = 0; g0.wpIndex = 2; g0.pauseT = 0.5;
-  // The vault watchman: lured off his beat by the pebble, asking the air.
+  // The vault guard: lured off his beat by the pebble, muttering at the air.
   const pebble = tileCenter(22, 5);
   const g1 = s.guards[1];
   g1.x = pebble.x - 96; g1.y = pebble.y + 88;
@@ -194,7 +194,7 @@ export function stageShot(name, world) {
   g1.state = 'suspicious'; g1.suspicion = 45; g1.peak = 45;
   g1.target = { x: pebble.x, y: pebble.y }; g1.lookT = 0;
   s.rings.push({ x: pebble.x, y: pebble.y, r: 34, maxR: 95, color: 'rgba(242, 201, 76, 0.55)' });
-  // The gallery watchman: on his beat in the west gallery, cone up the room.
+  // The gallery guard: on his beat in the west gallery, cone up the room.
   const gal = tileCenter(5, 8);
   const g2 = s.guards[2];
   g2.x = gal.x; g2.y = gal.y; g2.dir = -Math.PI / 2;
@@ -204,10 +204,10 @@ export function stageShot(name, world) {
   const lamp = tileCenter(13, 2);
   const exit = tileCenter(24, 10);
   s.annotations = [
-    { x: lamp.x, y: lamp.y, lx: 664, ly: 100, text: 'LAMPLIGHT: spotted from across the room' },
-    { x: pebble.x, y: pebble.y, lx: 880, ly: 236, text: '? HEARD THE PEBBLE: gone to check' },
-    { x: wren.x, y: wren.y, lx: 620, ly: 648, text: 'YOU: safe in the dark behind the crates' },
-    { x: exit.x, y: exit.y, lx: 1150, ly: 636, text: 'EXIT HATCH' },
+    { x: lamp.x, y: lamp.y, lx: 664, ly: 100, text: 'LAMPLIGHT: his gaze catches you in the glow' },
+    { x: pebble.x, y: pebble.y, lx: 1000, ly: 252, text: '? HE HEARD A PEBBLE — HE TURNS TO LISTEN' },
+    { x: wren.x, y: wren.y, lx: 960, ly: 580, text: 'WREN: flat against the crates, out of sight' },
+    { x: exit.x, y: exit.y, lx: 1150, ly: 636, text: 'ESCAPE HATCH' },
   ];
   return { screen: SCREEN_PLAY };
 }

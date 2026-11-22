@@ -4,7 +4,7 @@
 // instant death: suspicion has to climb, and breaking line of sight lets it fall.
 import {
   COLS, DETECTION, FIELD_X, FIELD_Y, GUARD, MAX_ALARM, NOISE, PEBBLES_PER_LEVEL,
-  PLAYER, ROWS, SCORES, STEP, TILE, TRIES_PER_LEVEL,
+  PLAYER, ROWS, SCORES, STEP, TILE, TRIES_PER_LEVEL, lingerSeconds,
 } from './config.js';
 import { LEVELS, blocksMove, blocksSight, isShadowTile, parseLevel } from './levels.js';
 
@@ -255,7 +255,7 @@ export function createWorld(random) {
     const p = state.player;
     const pDist = Math.hypot(p.x - guard.x, p.y - guard.y);
     const pTile = tileAtPx(state, p.x, p.y);
-    // Tall ferns hide a sneaking player — unless the watchman is close enough
+    // Fern thickets hide a sneaking player — unless the guard is close enough
     // to part them. That exception is decided here, not in hasLOS.
     const seen = inCone(guard, p.x, p.y)
       && (hasLOS(guard, p.x, p.y, p.stance === 'sneak') || (pTile === 'F' && pDist < 80));
@@ -313,8 +313,9 @@ export function createWorld(random) {
         target = wp;
         speed = GUARD.patrolSpeed * speedMul;
         if (Math.hypot(wp.x - guard.x, wp.y - guard.y) < 6) {
-          guard.wpIndex = (guard.wpIndex + 1) % guard.waypoints.length;
-          guard.pauseT = GUARD.pauseAtWaypoint;
+          const arrived = guard.wpIndex;
+          guard.wpIndex = (arrived + 1) % guard.waypoints.length;
+          guard.pauseT = lingerSeconds(arrived);
         }
       }
     } else if (guard.state === 'suspicious') {
@@ -430,8 +431,9 @@ export function createWorld(random) {
           const dy = wp.y - guard.y;
           const dist = Math.hypot(dx, dy);
           if (dist < 6) {
-            guard.wpIndex = (guard.wpIndex + 1) % guard.waypoints.length;
-            guard.pauseT = GUARD.pauseAtWaypoint;
+            const arrived = guard.wpIndex;
+            guard.wpIndex = (arrived + 1) % guard.waypoints.length;
+            guard.pauseT = lingerSeconds(arrived);
           } else if (dist > 0.01) {
             guard.dir = Math.atan2(dy, dx);
             const stepLen = Math.min(GUARD.patrolSpeed * speedMul * dt, dist);
@@ -457,13 +459,13 @@ export function createWorld(random) {
       p.stepPhase += speed * dt;
       if (p.stepPhase >= PLAYER.stepLength) {
         p.stepPhase = 0;
-        // Creaky boards betray even a sneak: a step on them carries like a walk.
-        const onCreaky = tileAtPx(state, p.x, p.y) === 'k';
+        // Loose boards betray even a sneak: a step on them carries like a walk.
+        const onLoose = tileAtPx(state, p.x, p.y) === 'k';
         const noiseR = p.stance === 'sneak'
-          ? (onCreaky ? NOISE.walkRadius : NOISE.sneakRadius)
+          ? (onLoose ? NOISE.walkRadius : NOISE.sneakRadius)
           : p.stance === 'sprint' ? NOISE.sprintRadius : NOISE.walkRadius;
         makeNoise(p.x, p.y, noiseR, events);
-        addRing(p.x, p.y, noiseR, onCreaky ? 'rgba(255, 154, 60, 0.5)' : 'rgba(238, 241, 245, 0.35)');
+        addRing(p.x, p.y, noiseR, onLoose ? 'rgba(255, 154, 60, 0.5)' : 'rgba(238, 241, 245, 0.35)');
         p.justStepped = true;
       } else {
         p.justStepped = false;
@@ -504,7 +506,7 @@ export function createWorld(random) {
       state.opalTaken = true;
       state.exitOpen = true;
       state.score += SCORES.opal;
-      toast(`${state.level.prize} secured — reach the exit unseen!`);
+      toast(`${state.level.prize} secured — now slip out unseen!`);
       events |= EVENT_OPAL;
     }
 

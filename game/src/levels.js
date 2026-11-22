@@ -1,8 +1,8 @@
 // The three heists. Each map is 26x13 tiles; the legend:
 //   # wall   . lamplit floor   , shadow floor   C crate (tall cover)
 //   P plant (cover)   = low display case (hides a sneaking player only)
-//   B bookshelf (tall cover, blocks sight)   F tall ferns (hide a sneaking
-//   player, unless the watchman is close)   k creaky boards (loud even sneaking)
+//   B bookshelf (tall cover, blocks sight)   F fern thicket (hides a sneaking
+//   player from a distance)   k loose floorboards (creak at any pace)
 //   L hanging lamp (lit floor)   D exit door   O the night's prize
 //   * optional loot   S player start
 // Guards patrol fixed waypoints, pausing at each: a patrol you can learn.
@@ -11,21 +11,21 @@ import { COLS, ROWS } from './config.js';
 export const LEVELS = [
   {
     name: 'THE HALCYON GALLERY',
-    subtitle: 'Three watchmen, one lamplit hall. Learn their beats, then cross it.',
+    subtitle: 'Three night guards, one lamplit hall. Learn their beats, then cross it.',
     prize: 'MOON OPAL',
     map: [
       '##########################',
-      '#BBBB,,,#........#,,,,O,,#',
-      '#,*,,,,,#..C.L...#,F,,,,,#',
-      '#,,,,,,,#........#,,,,,,,#',
+      '#BBBB,,,#........#,,,CO,,#',
+      '#,*,,,,,#..C.L...#,F,F,,,#',
+      '#,,,,,,,#....F...#,,,,,F,#',
       '#,,C,,,,#........#,,,,,,,#',
-      '#,,,,,,,...=.....#,,F,,,,#',
+      '#,,,,,,,...=.C...#,,F,,,,#',
       '#,,,,,,,#.....*..#,,,,,,,#',
       '#,,P,,,,#..C..k..#,,,,*,,#',
       '#,,,,,,,#....k...#,,C,,,,#',
-      '#,,,,,,,#.........,,,,,,,#',
+      '#,,,,,,,#...=..F..,,,,,,,#',
       '#,S,,,,,#..=.L...#,F,,,,D#',
-      '#,,,,,,,#........#,,,,,,,#',
+      '#,,,P,C,#........#,,,,,,,#',
       '##########################',
     ],
     guards: [

@@ -2,7 +2,7 @@
 // the guards' cones hugging the walls, the HUD, and every screen. The cone is
 // a real fan of rays, so it bends around crates exactly as the guard's sight does.
 import {
-  COLS, FIELD_H, FIELD_W, FIELD_X, FIELD_Y, GUARD, HUD_H, PALETTE, ROWS, TILE,
+  COLS, FIELD_H, FIELD_W, FIELD_X, FIELD_Y, GUARD, HUD_H, PALETTE, ROWS, TILE, lingerSeconds,
 } from './config.js';
 import { tileCenter } from './world.js';
 
@@ -92,7 +92,7 @@ export function createRenderer(canvas) {
           ctx.fillRect(x + ((col * 13 + row * 7) % 36) + 4, y + ((col * 5 + row * 11) % 36) + 4, 3, 3);
         }
         if (ch === 'k') {
-          // Creaky boards: worn, pale planks with nail dots.
+          // Loose floorboards: worn, pale planks with nail dots.
           ctx.fillStyle = 'rgba(214, 178, 110, 0.28)';
           ctx.fillRect(x + 2, y + 2, TILE - 4, TILE - 4);
           ctx.strokeStyle = 'rgba(214, 178, 110, 0.5)';
@@ -122,13 +122,13 @@ export function createRenderer(canvas) {
     for (const lamp of state.lamps) {
       const c = tileCenter(lamp.col, lamp.row);
       const pulse = 0.12 + 0.03 * Math.sin(state.time * 2 + lamp.col);
-      const g = ctx.createRadialGradient(c.x, c.y, 8, c.x, c.y, 175);
-      g.addColorStop(0, `rgba(255, 184, 92, ${pulse + 0.14})`);
-      g.addColorStop(0.55, `rgba(255, 170, 70, ${pulse * 0.5})`);
+      const g = ctx.createRadialGradient(c.x, c.y, 8, c.x, c.y, 215);
+      g.addColorStop(0, `rgba(255, 184, 92, ${pulse + 0.20})`);
+      g.addColorStop(0.55, `rgba(255, 170, 70, ${pulse * 0.6})`);
       g.addColorStop(1, 'rgba(255, 184, 92, 0)');
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(c.x, c.y, 175, 0, Math.PI * 2);
+      ctx.arc(c.x, c.y, 215, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
@@ -325,10 +325,11 @@ export function createRenderer(canvas) {
       ctx.stroke();
     }
     ctx.setLineDash([]);
-    // Timing badge at each waypoint: how long the watchman lingers there.
+    // Timing badge at each waypoint: how long the guard lingers there — short
+    // and long lingers alternate, so the beat reads as a rhythm, not a metronome.
     for (const guard of state.guards) {
       if (guard.state !== 'patrol' && guard.state !== 'return') continue;
-      for (const [col, row] of guard.waypoints) {
+      for (const [i, [col, row]] of guard.waypoints.entries()) {
         const c = tileCenter(col, row);
         ctx.fillStyle = 'rgba(13, 15, 20, 0.9)';
         ctx.beginPath();
@@ -341,7 +342,7 @@ export function createRenderer(canvas) {
         ctx.font = 'bold 9px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('1s', c.x, c.y + 0.5);
+        ctx.fillText(`${lingerSeconds(i)}s`, c.x, c.y + 0.5);
       }
     }
     ctx.restore();
@@ -358,7 +359,7 @@ export function createRenderer(canvas) {
     for (const guard of state.guards) {
       const points = conePoints(guard);
       // Soft cone: an amber wash that fades with distance, so the edge of
-      // what the watchman sees reads at a glance.
+      // what the guard sees reads at a glance.
       const range = GUARD.coneRange + state.alarm * 10;
       const rgb = coneRgb(guard);
       const g = ctx.createRadialGradient(guard.x, guard.y, 10, guard.x, guard.y, range);
@@ -425,7 +426,7 @@ export function createRenderer(canvas) {
         ctx.textAlign = 'center';
         ctx.fillText('?', guard.x, guard.y - 22);
         // The guard says what he heard out loud: the player reads his mind.
-        const bubble = 'What was that?';
+        const bubble = 'Huh — something moved…';
         ctx.font = 'bold 12px system-ui, sans-serif';
         const bw = ctx.measureText(bubble).width + 18;
         const bx = Math.min(Math.max(guard.x + 18, FIELD_X + 4), FIELD_X + FIELD_W - bw - 4);
@@ -458,18 +459,24 @@ export function createRenderer(canvas) {
     const p = state.player;
     if (!p) return;
     ctx.save();
-    const r = p.stance === 'sneak' ? 10 : 12;
+    const r = p.stance === 'sneak' ? 11 : 13;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
     ctx.beginPath();
     ctx.ellipse(p.x, p.y + 9, 11, 4.5, 0, 0, Math.PI * 2);
     ctx.fill();
-    // A faint ring when standing in shadow: the dark is working for you.
+    // A bright ring, always on: Wren is the thing the eye must find first.
+    ctx.strokeStyle = 'rgba(127, 231, 212, 0.9)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, r + 5, 0, Math.PI * 2);
+    ctx.stroke();
+    // A faint second ring when standing in shadow: the dark is working for you.
     const tile = state.tiles[Math.floor((p.y - FIELD_Y) / TILE)]?.[Math.floor((p.x - FIELD_X) / TILE)];
     if (tile === ',') {
       ctx.strokeStyle = 'rgba(127, 184, 201, 0.5)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, r + 6, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, r + 9, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.fillStyle = p.stance === 'sneak' ? PALETTE.tealDark : PALETTE.teal;
@@ -563,7 +570,7 @@ export function createRenderer(canvas) {
     const maxSuspicion = state.guards.reduce((m, g) => Math.max(m, g.suspicion), 0);
     const anyAlert = state.guards.some((g) => g.state === 'alert');
     const anySuspicious = state.guards.some((g) => g.state === 'suspicious' || g.state === 'search');
-    const objective = state.opalTaken ? 'Reach the exit — unseen' : `Steal the ${state.level.prize}, then reach the exit`;
+    const objective = state.opalTaken ? 'Slip out through the hatch — unseen' : `Steal the ${state.level.prize}, then slip away unseen`;
     ctx.fillStyle = PALETTE.text;
     ctx.font = 'bold 12px system-ui, sans-serif';
     ctx.textAlign = 'center';
@@ -571,8 +578,8 @@ export function createRenderer(canvas) {
     ctx.fillStyle = anyAlert ? PALETTE.danger : anySuspicious ? '#ff9a3c' : PALETTE.muted;
     ctx.font = 'bold 11px system-ui, sans-serif';
     ctx.fillText(
-      anyAlert ? '● SPOTTED — RUN FOR THE SHADOWS'
-        : anySuspicious ? '● A WATCHMAN IS SUSPICIOUS'
+      anyAlert ? '● SEEN — MELT INTO THE DARK'
+        : anySuspicious ? '● A GUARD GREW SUSPICIOUS'
         : '○ UNSEEN',
       640, 34,
     );
@@ -636,13 +643,13 @@ export function createRenderer(canvas) {
   // The field-notes legend: seven lines that teach the whole game at a glance.
   // Shorter than a manual, longer than a tooltip — the words are our own.
   const FIELD_NOTES = [
-    { icon: 'cone', text: 'Watchman + cone — what he sees' },
-    { icon: 'blind', text: 'Blind spot behind cover — safe' },
-    { icon: 'lamp', text: 'Lamplight — spotted from far away' },
-    { icon: 'fern', text: 'Tall ferns — hidden until he is close' },
-    { icon: 'creak', text: 'Creaky boards — loud even sneaking' },
-    { icon: 'ring', text: 'Rings — noise, and the watchman’s beat' },
-    { icon: 'exit', text: 'Exit hatch — opens once the prize is yours' },
+    { icon: 'lamp', text: 'Lamplight gives you away — wait for dark' },
+    { icon: 'cone', text: 'A guard’s gaze sweeps a cone — stay clear' },
+    { icon: 'fern', text: 'Fern thickets hide you from a distance' },
+    { icon: 'creak', text: 'Loose floorboards creak at any pace' },
+    { icon: 'ring', text: 'Sound rings — how far a noise carries' },
+    { icon: 'blind', text: 'Tall cover breaks his line of sight' },
+    { icon: 'exit', text: 'Take the prize, then the hatch unlocks' },
   ];
 
   function drawFieldNotes() {

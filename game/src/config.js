@@ -29,10 +29,17 @@ export const GUARD = {
   returnSpeed: 96,
   coneRange: 260,
   coneHalfAngle: 0.60,
-  pauseAtWaypoint: 1.4,
+  pauseShort: 1.0,
+  pauseLong: 2.0,
   lookAroundTime: 2.6,
   catchDistance: 26,
 };
+
+// Waypoints alternate a short and a long linger, so the beat is learnable
+// but not metronomic; the badge on each waypoint shows its own linger.
+export function lingerSeconds(index) {
+  return index % 2 === 0 ? GUARD.pauseShort : GUARD.pauseLong;
+}
 
 export const DETECTION = {
   basePerSecond: 62,
@@ -85,10 +92,10 @@ export const PALETTE = {
   tealDark: '#1d8a80',
   guard: '#c0392b',
   guardDark: '#7e241b',
-  floorLitA: '#4a3a26',
-  floorLitB: '#52402a',
-  floorShadowA: '#1e2536',
-  floorShadowB: '#232c40',
+  floorLitA: '#52402a',
+  floorLitB: '#5a472f',
+  floorShadowA: '#1a2030',
+  floorShadowB: '#1e2636',
   floorPlank: 'rgba(0,0,0,0.22)',
   floorStone: 'rgba(255,255,255,0.045)',
   wall: '#171b28',
