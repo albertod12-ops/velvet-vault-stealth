@@ -1,6 +1,8 @@
 // The three heists. Each map is 26x13 tiles; the legend:
-//   # wall   . lit floor   , shadow floor   C crate (tall cover)
+//   # wall   . lamplit floor   , shadow floor   C crate (tall cover)
 //   P plant (cover)   = low display case (hides a sneaking player only)
+//   B bookshelf (tall cover, blocks sight)   F tall ferns (hide a sneaking
+//   player, unless the watchman is close)   k creaky boards (loud even sneaking)
 //   L hanging lamp (lit floor)   D exit door   O the night's prize
 //   * optional loot   S player start
 // Guards patrol fixed waypoints, pausing at each: a patrol you can learn.
@@ -9,25 +11,27 @@ import { COLS, ROWS } from './config.js';
 export const LEVELS = [
   {
     name: 'THE HALCYON GALLERY',
-    subtitle: 'One guard, one long hall. Learn his beat, then cross it.',
+    subtitle: 'Three watchmen, one lamplit hall. Learn their beats, then cross it.',
     prize: 'MOON OPAL',
     map: [
       '##########################',
-      '#,,,,,,#........#,,,,,,,,#',
-      '#,*,,,,#..C.L...#,,,,,O,,#',
-      '#,,,,,,#........,,,,,,,,,#',
-      '#,,,,,,#..=.....#,,,P,,,,#',
-      '#,,,,,,#........#,,,,,*,,#',
-      '#,,,,,,,........,,,,,,,,,#',
-      '#,,,,,,#........#,,,,,,,,#',
-      '#,,,,,,#..C.....#,,,,,,,,#',
-      '#,,,,,,#........,,,,*,,,,#',
-      '#,S,,,,#..=.L...#,,,,,,D,#',
-      '#,,,,,,#........#,,,,,,,,#',
+      '#BBBB,,,#........#,,,,O,,#',
+      '#,*,,,,,#..C.L...#,F,,,,,#',
+      '#,,,,,,,#........#,,,,,,,#',
+      '#,,C,,,,#........#,,,,,,,#',
+      '#,,,,,,,...=.....#,,F,,,,#',
+      '#,,,,,,,#.....*..#,,,,,,,#',
+      '#,,P,,,,#..C..k..#,,,,*,,#',
+      '#,,,,,,,#....k...#,,C,,,,#',
+      '#,,,,,,,#.........,,,,,,,#',
+      '#,S,,,,,#..=.L...#,F,,,,D#',
+      '#,,,,,,,#........#,,,,,,,#',
       '##########################',
     ],
     guards: [
-      { waypoints: [[8, 3], [15, 3], [15, 9], [8, 9]] },
+      { waypoints: [[10, 2], [15, 2], [15, 6], [10, 6]] },
+      { waypoints: [[19, 3], [23, 7], [19, 7]] },
+      { waypoints: [[2, 4], [6, 9], [2, 9]] },
     ],
   },
   {
@@ -108,18 +112,18 @@ export function isWallTile(ch) {
   return ch === '#';
 }
 
-/** A tile blocks movement (walls, crates, plants, display cases, a locked door). */
+/** A tile blocks movement (walls, crates, plants, display cases, bookshelves, a locked door). */
 export function blocksMove(ch, exitOpen) {
   if (ch === '#') return true;
-  if (ch === 'C' || ch === 'P' || ch === '=') return true;
+  if (ch === 'C' || ch === 'P' || ch === '=' || ch === 'B') return true;
   if (ch === 'D') return !exitOpen;
   return false;
 }
 
 /** A tile blocks a guard's line of sight. Low cases hide only a sneaking player. */
 export function blocksSight(ch, playerSneaking) {
-  if (ch === '#' || ch === 'C' || ch === 'P') return true;
-  if (ch === '=' && playerSneaking) return true;
+  if (ch === '#' || ch === 'C' || ch === 'P' || ch === 'B') return true;
+  if ((ch === '=' || ch === 'F') && playerSneaking) return true;
   return false;
 }
 

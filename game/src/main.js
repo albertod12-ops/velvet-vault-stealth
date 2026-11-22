@@ -10,7 +10,7 @@ import { LEVELS } from './levels.js';
 import { createRandom } from './random.js';
 import { createAudio } from './audio.js';
 import {
-  ACTION_CONFIRM, ACTION_INTERACT, ACTION_MUTE, ACTION_PAUSE, ACTION_RESTART,
+  ACTION_CONFIRM, ACTION_INTERACT, ACTION_MUTE, ACTION_NOTES, ACTION_PAUSE, ACTION_RESTART,
   createInput,
 } from './input.js';
 import {
@@ -134,6 +134,10 @@ function runGame() {
         announce('Paused.');
       } else if (actions & ACTION_RESTART) {
         startLevel(world.state.levelIndex);
+      }
+      if (actions & ACTION_NOTES) {
+        world.state.fieldNotes = !world.state.fieldNotes;
+        announce(world.state.fieldNotes ? 'Field notes open.' : 'Field notes closed.');
       }
       return { actions, pebbleAt };
     }

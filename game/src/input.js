@@ -6,6 +6,7 @@ export const ACTION_RESTART = 4;
 export const ACTION_MUTE = 8;
 export const ACTION_INTERACT = 16;
 export const ACTION_PEBBLE = 32;
+export const ACTION_NOTES = 64;
 
 const KEYMAP = {
   KeyW: 'up', ArrowUp: 'up',
@@ -36,6 +37,7 @@ export function createInput(canvas) {
     else if (event.code === 'KeyR') actions |= ACTION_RESTART;
     else if (event.code === 'KeyM') actions |= ACTION_MUTE;
     else if (event.code === 'KeyE') actions |= ACTION_INTERACT;
+    else if (event.code === 'KeyH') actions |= ACTION_NOTES;
   }
 
   function onKeyUp(event) {

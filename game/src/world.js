@@ -67,6 +67,10 @@ export function createWorld(random) {
     messages: [],
     rings: [],
     levelTime: 0,
+    // Staging overlays, set by shots.js (and by H in live play): the field-notes
+    // legend and the annotated callouts. Empty/off in a normal game.
+    annotations: [],
+    fieldNotes: false,
   };
 
   function toast(text) {
@@ -127,6 +131,8 @@ export function createWorld(random) {
     state.ghost = true;
     state.messages = [];
     state.rings = [];
+    state.annotations = [];
+    state.fieldNotes = false;
     if (!keepTries) state.triesLeft = TRIES_PER_LEVEL;
     const s = tileCenter(state.start.col, state.start.row);
     state.player = {
@@ -207,7 +213,7 @@ export function createWorld(random) {
       const px = x + dx * d;
       const py = y + dy * d;
       const ch = tileAtPx(state, px, py);
-      if (ch === '#' || ch === 'C' || ch === 'P') return d;
+      if (ch === '#' || ch === 'C' || ch === 'P' || ch === 'B') return d;
     }
     return maxDist;
   }
@@ -247,7 +253,12 @@ export function createWorld(random) {
 
   function updateGuard(guard, dt, events) {
     const p = state.player;
-    const seen = inCone(guard, p.x, p.y) && hasLOS(guard, p.x, p.y, p.stance === 'sneak');
+    const pDist = Math.hypot(p.x - guard.x, p.y - guard.y);
+    const pTile = tileAtPx(state, p.x, p.y);
+    // Tall ferns hide a sneaking player — unless the watchman is close enough
+    // to part them. That exception is decided here, not in hasLOS.
+    const seen = inCone(guard, p.x, p.y)
+      && (hasLOS(guard, p.x, p.y, p.stance === 'sneak') || (pTile === 'F' && pDist < 80));
     if (seen) {
       const dist = Math.hypot(p.x - guard.x, p.y - guard.y);
       const t = clamp(1 - dist / coneRange(), 0, 1);
@@ -446,9 +457,13 @@ export function createWorld(random) {
       p.stepPhase += speed * dt;
       if (p.stepPhase >= PLAYER.stepLength) {
         p.stepPhase = 0;
-        const noiseR = p.stance === 'sneak' ? NOISE.sneakRadius : p.stance === 'sprint' ? NOISE.sprintRadius : NOISE.walkRadius;
+        // Creaky boards betray even a sneak: a step on them carries like a walk.
+        const onCreaky = tileAtPx(state, p.x, p.y) === 'k';
+        const noiseR = p.stance === 'sneak'
+          ? (onCreaky ? NOISE.walkRadius : NOISE.sneakRadius)
+          : p.stance === 'sprint' ? NOISE.sprintRadius : NOISE.walkRadius;
         makeNoise(p.x, p.y, noiseR, events);
-        addRing(p.x, p.y, noiseR, 'rgba(238, 241, 245, 0.35)');
+        addRing(p.x, p.y, noiseR, onCreaky ? 'rgba(255, 154, 60, 0.5)' : 'rgba(238, 241, 245, 0.35)');
         p.justStepped = true;
       } else {
         p.justStepped = false;
